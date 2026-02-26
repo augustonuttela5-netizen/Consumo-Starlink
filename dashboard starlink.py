@@ -14,14 +14,18 @@ def converter_para_gb(valor):
 
     valor = str(valor).strip().upper().replace(" ", "").replace(",", ".")
 
-    if "TB" in valor:
-        return float(valor.replace("TB", "")) * 1024
-    elif "GB" in valor:
-        return float(valor.replace("GB", ""))
-    elif "MB" in valor:
-        return float(valor.replace("MB", "")) / 1024
-    else:
-        return float(valor)
+    try:
+        if "TB" in valor:
+            return float(valor.replace("TB", "")) * 1024
+        elif "GB" in valor:
+            return float(valor.replace("GB", ""))
+        elif "MB" in valor:
+            return float(valor.replace("MB", "")) / 1024
+        else:
+            return float(valor)
+    except:
+        return 0
+
 
 # -------------------------------------------------
 # FORMATAR COM UNIDADE
@@ -32,13 +36,34 @@ def formatar_unidade(valor):
     else:
         return f"{valor:.2f} GB"
 
+
+# -------------------------------------------------
+# LEITURA SEGURA DE CSV (CORRIGIDO)
+# -------------------------------------------------
+def ler_csv_seguro(caminho):
+    try:
+        return pd.read_csv(
+            caminho,
+            sep=None,
+            engine="python",
+            on_bad_lines="skip"
+        )
+    except:
+        return pd.read_csv(
+            caminho,
+            sep=";",
+            engine="python",
+            on_bad_lines="skip"
+        )
+
+
 # -------------------------------------------------
 # CARREGAR DADOS
 # -------------------------------------------------
 @st.cache_data
 def carregar_dados():
-    df_bases = pd.read_csv("starlink_bases.csv")
-    df_trafego = pd.read_csv("trafego_carros.csv")
+    df_bases = ler_csv_seguro("starlink_bases.csv")
+    df_trafego = ler_csv_seguro("trafego_carros.csv")
 
     df_bases.columns = df_bases.columns.str.strip()
     df_trafego.columns = df_trafego.columns.str.strip()
@@ -49,6 +74,7 @@ def carregar_dados():
         df["DIFERENCA_GB"] = df["CONSUMO_FINAL_GB"] - df["CONSUMO_INICIAL_GB"]
 
     return df_bases, df_trafego
+
 
 df_bases, df_trafego = carregar_dados()
 
@@ -107,7 +133,7 @@ st.dataframe(
 st.divider()
 
 # -------------------------------------------------
-# GRÁFICO VERTICAL PADRÃO
+# GRÁFICO VERTICAL NORMAL
 # -------------------------------------------------
 st.subheader(f"📊 Comparativo de Consumo - {tipo}")
 
@@ -134,14 +160,14 @@ fig.update_layout(
     barmode="group",
     height=650,
     xaxis_tickangle=-45,
-    font=dict(size=16),
+    font=dict(size=15),
     yaxis_title="Consumo (GB / TB)",
-    margin=dict(t=80)
+    margin=dict(t=80),
+    uniformtext_minsize=10,
+    uniformtext_mode='hide'
 )
 
-fig.update_traces(
-    cliponaxis=False
-)
+fig.update_traces(cliponaxis=False)
 
 st.plotly_chart(fig, use_container_width=True)
 
@@ -165,14 +191,12 @@ fig_diff.update_layout(
     template="plotly_dark",
     height=600,
     xaxis_tickangle=-45,
-    font=dict(size=16),
+    font=dict(size=15),
     yaxis_title="Consumo no Período (GB / TB)",
     margin=dict(t=80)
 )
 
-fig_diff.update_traces(
-    cliponaxis=False
-)
+fig_diff.update_traces(cliponaxis=False)
 
 st.plotly_chart(fig_diff, use_container_width=True)
 
