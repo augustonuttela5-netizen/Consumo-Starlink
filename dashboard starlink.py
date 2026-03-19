@@ -162,9 +162,8 @@ st.subheader("📌 Indicadores Gerais")
 
 col1, col2, col3, col4 = st.columns(4)
 
-# Consumo total = soma das diferenças (consumo real no período)
-col1.metric("Consumo Total", formatar_unidade(df["DIFERENCA_GB"].sum()))
-
+consumo_total_literal = df["CONSUMO_INICIAL_GB"].sum() + df["CONSUMO_FINAL_GB"].sum()
+col1.metric("Consumo Total", formatar_unidade(consumo_total_literal))
 # Maior consumo individual no período
 col2.metric("Maior Consumo", formatar_unidade(df["DIFERENCA_GB"].max()))
 
